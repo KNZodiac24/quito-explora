@@ -89,7 +89,7 @@ function ForgotPassword({ onNavigate }) {
     <div className="auth-container">
       <div className="auth-box">
         <div className="auth-header">
-          <h1>🔐 Recuperar Contraseña</h1>
+          <h1>Recuperar Contraseña</h1>
           <p>
             {step === 1
               ? 'Ingresa tu email para recibir instrucciones'

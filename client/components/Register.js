@@ -73,7 +73,7 @@ function Register({ onNavigate }) {
     <div className="auth-container">
       <div className="auth-box">
                 <div className="auth-header">
-          <h1>🎉 Registro</h1>
+          <h1>Registro</h1>
           <p>Crea tu cuenta para adoptar mascotas</p>
         </div>
 
