@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuitoExplora - Descubre la ciudad</title>
+  <meta name="description" content="Plataforma para descubrir y gestionar eventos en la ciudad de Quito">
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- React y ReactDOM desde CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- Babel Standalone para transpilar JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Cargar todos los componentes con Babel -->
+  <script type="text/babel" src="/client/components/Login.js"></script>
+  <script type="text/babel" src="/client/components/Register.js"></script>
+  <script type="text/babel" src="/client/components/ForgotPassword.js"></script>
+  <script type="text/babel" src="/client/components/EventList.js"></script>
+  <script type="text/babel" src="/client/components/EventForm.js"></script>
+  <script type="text/babel" src="/client/components/Chat.js"></script>
+  <script type="text/babel" src="/client/components/Dashboard.js"></script>
+  <script type="text/babel" src="/client/App.js"></script>
+  <script type="text/babel" src="/client/index.js"></script>
+</body>
+</html>
