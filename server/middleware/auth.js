@@ -1,18 +1,30 @@
-import jwt from 'jsonwebtoken';
+import supabase from '../config/database.js';
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-    
-    if (!token) {
-      return res.status(401).json({ error: 'Token no proporcionado' });
+    const token = req.cookies.token;
+
+    if (!token) return res.status(401).json({ error: 'Token no proporcionado' });
+
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data.user) {
+      return res.status(401).json({ error: 'Token inválido o expirado' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const user = data.user;
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      nombre: user.user_metadata?.nombre || null,
+      rol: user.user_metadata?.rol || 'usuario'
+    };
+
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Token inválido o expirado' });
+    console.error('Error en autenticación:', error);
+    res.status(401).json({ error: 'No autorizado' });
   }
 };
 
