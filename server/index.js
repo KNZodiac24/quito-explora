@@ -4,8 +4,8 @@ import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import supabase from './config/database.js';
 
 import authRoutes from './routes/auth.js';
 import eventosRoutes from './routes/eventos.js';
@@ -34,44 +34,55 @@ app.use('/api/auth', authRoutes);
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/chat', chatRoutes);
 
-// WebSocket para chat en tiempo real
-const clients = new Map();
+// WebSocket para chat en tiempo real por evento
+const clients = new Map(); // Map de WebSocket -> {userId, userName, eventoId}
 
 wss.on('connection', (ws, req) => {
   console.log('Nueva conexión WebSocket');
 
-  ws.on('message', (message) => {
+  ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
 
-      // Autenticar usuario con token
+      // Autenticar usuario con token de Supabase
       if (data.type === 'auth') {
         try {
-          const decoded = jwt.verify(data.token, process.env.JWT_SECRET);
-          ws.userId = decoded.id;
-          ws.userName = decoded.nombre;
-          clients.set(ws, { userId: decoded.id, userName: decoded.nombre });
+          const { data: userData, error } = await supabase.auth.getUser(data.token);
+          
+          if (error || !userData.user) {
+            ws.send(JSON.stringify({ type: 'auth', success: false, error: 'Token inválido' }));
+            ws.close();
+            return;
+          }
+
+          const user = userData.user;
+          ws.userId = user.id;
+          ws.userName = user.user_metadata?.nombre || user.email;
+          ws.eventoId = data.eventoId; // Guardar el ID del evento
+          clients.set(ws, { userId: user.id, userName: ws.userName, eventoId: data.eventoId });
           ws.send(JSON.stringify({ type: 'auth', success: true }));
-          console.log(`Usuario autenticado: ${decoded.nombre}`);
+          console.log(`Usuario autenticado: ${ws.userName} en evento ${data.eventoId}`);
         } catch (error) {
-          ws.send(JSON.stringify({ type: 'auth', success: false, error: 'Token inválido' }));
+          console.error('Error en autenticación WebSocket:', error);
+          ws.send(JSON.stringify({ type: 'auth', success: false, error: 'Error de autenticación' }));
           ws.close();
         }
         return;
       }
 
       // Manejar mensaje de chat
-      if (data.type === 'chat' && ws.userName) {
+      if (data.type === 'chat' && ws.userName && ws.eventoId) {
         const messageData = {
           type: 'chat',
+          evento_id: ws.eventoId,
           usuario_nombre: ws.userName,
           contenido: data.contenido,
           fecha_envio: new Date().toISOString()
         };
 
-        // Broadcast a todos los clientes conectados
+        // Broadcast solo a los clientes conectados al mismo evento
         wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
+          if (client.readyState === WebSocket.OPEN && client.eventoId === ws.eventoId) {
             client.send(JSON.stringify(messageData));
           }
         });

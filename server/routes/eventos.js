@@ -1,7 +1,94 @@
 import express from 'express';
-import supabase from '../config/database.js';
+import multer from 'multer';
+import path from 'path';
+import supabase, { supabaseAdmin } from '../config/database.js';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.js';
+
 const router = express.Router();
+
+// Configurar multer para procesar archivos en memoria
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif, webp)'));
+    }
+  }
+});
+
+// Endpoint para subir imagen a Supabase Storage
+router.post('/upload-image', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+    }
+
+    console.log('Intentando subir archivo:', req.file.originalname);
+    console.log('Tamaño:', req.file.size, 'bytes');
+    console.log('Tipo MIME:', req.file.mimetype);
+
+    // Generar nombre único para el archivo
+    const fileExt = path.extname(req.file.originalname);
+    const fileName = `evento-${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
+    
+    console.log('Nombre del archivo en storage:', fileName);
+    
+    // Subir a Supabase Storage usando cliente admin para bypass RLS
+    const { data, error } = await supabaseAdmin.storage
+      .from('eventos-imagenes')
+      .upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype,
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Error detallado de Supabase Storage:', error);
+      
+      // Si el bucket no existe, intentar crearlo o dar instrucciones
+      if (error.message?.includes('not found') || error.message?.includes('does not exist')) {
+        return res.status(500).json({ 
+          error: 'El bucket "eventos-imagenes" no existe en Supabase Storage. Por favor créalo en el dashboard de Supabase.',
+          details: error.message 
+        });
+      }
+      
+      return res.status(500).json({ 
+        error: 'Error al subir imagen a Supabase Storage',
+        details: error.message 
+      });
+    }
+
+    console.log('Imagen subida exitosamente:', data);
+
+    // Obtener la URL pública de la imagen
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from('eventos-imagenes')
+      .getPublicUrl(fileName);
+
+    console.log('URL pública generada:', publicUrlData.publicUrl);
+
+    res.json({ 
+      message: 'Imagen subida exitosamente',
+      url: publicUrlData.publicUrl
+    });
+  } catch (error) {
+    console.error('Error general al subir imagen:', error);
+    res.status(500).json({ 
+      error: 'Error al subir imagen',
+      details: error.message 
+    });
+  }
+});
 
 // Obtener todos los eventos (usuarios autenticados)
 router.get('/', authMiddleware, async (req, res) => {
@@ -108,8 +195,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
       estado,
       edad_minima,
       accesibilidad_discapacidad,
-      estacionamiento_disponible,
-      tags
+      estacionamiento_disponible
     } = req.body;
 
     // Validaciones
@@ -141,8 +227,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
         estado: estado || 'Programado',
         edad_minima,
         accesibilidad_discapacidad: accesibilidad_discapacidad || false,
-        estacionamiento_disponible: estacionamiento_disponible || false,
-        tags
+        estacionamiento_disponible: estacionamiento_disponible || false
       }])
       .select();
 
@@ -181,8 +266,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
       estado,
       edad_minima,
       accesibilidad_discapacidad,
-      estacionamiento_disponible,
-      tags
+      estacionamiento_disponible
     } = req.body;
 
     const { data, error } = await supabase
@@ -209,8 +293,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
         estado,
         edad_minima,
         accesibilidad_discapacidad,
-        estacionamiento_disponible,
-        tags
+        estacionamiento_disponible
       })
       .eq('id', id)
       .select();

@@ -5,7 +5,7 @@ function Dashboard({ user, token, onLogout }) {
   const [eventos, setEventos] = useState([]);
   const [selectedEvento, setSelectedEvento] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [showChat, setShowChat] = useState(false);
+  const [chatEvento, setChatEvento] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: '',
@@ -98,6 +98,14 @@ function Dashboard({ user, token, onLogout }) {
     fetchEventos();
   };
 
+  const handleOpenChat = (evento) => {
+    setChatEvento(evento);
+  };
+
+  const handleCloseChat = () => {
+    setChatEvento(null);
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -174,6 +182,7 @@ function Dashboard({ user, token, onLogout }) {
             token={token}
             isAdmin={isAdmin}
             onEdit={isAdmin ? handleEditEvento : null}
+            onOpenChat={handleOpenChat}
           />
         )}
 
@@ -187,18 +196,14 @@ function Dashboard({ user, token, onLogout }) {
         )}
       </main>
 
-      {/* Botón flotante del chat */}
-      <button
-        className="chat-toggle-btn"
-        onClick={() => setShowChat(!showChat)}
-        title="Abrir chat"
-      >
-        💬
-      </button>
-
-      {/* Chat lateral */}
-      {showChat && (
-        <Chat user={user} token={token} onClose={() => setShowChat(false)} />
+      {/* Chat del evento */}
+      {chatEvento && (
+        <Chat 
+          user={user} 
+          token={token} 
+          evento={chatEvento}
+          onClose={handleCloseChat} 
+        />
       )}
     </div>
   );

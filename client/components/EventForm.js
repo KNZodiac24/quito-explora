@@ -28,12 +28,15 @@ function EventForm({ token, eventoToEdit, onSuccess, onCancel }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageOption, setImageOption] = useState('url'); // 'url' o 'upload'
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (eventoToEdit) {
       setFormData({
         ...eventoToEdit,
-        fecha_evento: eventoToEdit.fecha_evento ? eventoToEdit.fecha_evento.substring(0, 16) : ''
+        fecha_evento: eventoToEdit.fecha_evento ? eventoToEdit.fecha_evento.substring(0, 10) : ''
       });
     }
   }, [eventoToEdit]);
@@ -55,17 +58,74 @@ function EventForm({ token, eventoToEdit, onSuccess, onCancel }) {
     }
   };
 
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tamaño (5MB máximo)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('La imagen no debe superar los 5MB');
+        return;
+      }
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setError('Solo se permiten archivos de imagen');
+        return;
+      }
+      setImageFile(file);
+      setError('');
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await fetch('/api/eventos/upload-image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Error al subir imagen');
+      }
+
+      return data.url;
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      let imagenUrl = formData.imagen_url;
+
+      // Si se eligió subir archivo, subirlo primero
+      if (imageOption === 'upload' && imageFile) {
+        imagenUrl = await uploadImage();
+      }
+
       const url = eventoToEdit ? `/api/eventos/${eventoToEdit.id}` : '/api/eventos';
       const method = eventoToEdit ? 'PUT' : 'POST';
 
       const dataToSend = {
         ...formData,
+        imagen_url: imagenUrl,
         capacidad_max: formData.capacidad_max ? parseInt(formData.capacidad_max) : null,
         precio_entrada: parseFloat(formData.precio_entrada) || 0,
         edad_minima: formData.edad_minima ? parseInt(formData.edad_minima) : null
@@ -174,9 +234,9 @@ function EventForm({ token, eventoToEdit, onSuccess, onCancel }) {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="fecha_evento">Fecha y Hora *</label>
+              <label htmlFor="fecha_evento">Fecha del Evento *</label>
               <input
-                type="datetime-local"
+                type="date"
                 id="fecha_evento"
                 name="fecha_evento"
                 value={formData.fecha_evento}
@@ -198,7 +258,7 @@ function EventForm({ token, eventoToEdit, onSuccess, onCancel }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="hora_fin">Hora de Fin</label>
+              <label htmlFor="hora_fin">Hora de Fin *</label>
               <input
                 type="time"
                 id="hora_fin"
@@ -395,23 +455,68 @@ function EventForm({ token, eventoToEdit, onSuccess, onCancel }) {
           )}
 
           <div className="form-group">
-            <label htmlFor="imagen_url">URL de la Imagen</label>
-            <input
-              type="url"
-              id="imagen_url"
-              name="imagen_url"
-              value={formData.imagen_url}
-              onChange={handleChange}
-              placeholder="https://ejemplo.com/imagen.jpg"
-            />
+            <label>Imagen del Evento</label>
+            <div className="image-option-tabs">
+              <button
+                type="button"
+                className={`tab-button ${imageOption === 'url' ? 'active' : ''}`}
+                onClick={() => setImageOption('url')}
+              >
+                URL de Imagen
+              </button>
+              <button
+                type="button"
+                className={`tab-button ${imageOption === 'upload' ? 'active' : ''}`}
+                onClick={() => setImageOption('upload')}
+              >
+                Subir Archivo
+              </button>
+            </div>
+
+            {imageOption === 'url' ? (
+              <input
+                type="url"
+                id="imagen_url"
+                name="imagen_url"
+                value={formData.imagen_url}
+                onChange={handleChange}
+                placeholder="https://ejemplo.com/imagen.jpg"
+              />
+            ) : (
+              <div className="file-upload-wrapper">
+                <input
+                  type="file"
+                  id="image_file"
+                  accept="image/*"
+                  onChange={handleImageFileChange}
+                  className="file-input"
+                />
+                {imageFile && (
+                  <p className="file-name">
+                    📎 {imageFile.name} ({(imageFile.size / 1024).toFixed(2)} KB)
+                  </p>
+                )}
+                <p className="file-hint">Tamaño máximo: 5MB. Formatos: JPG, PNG, GIF, WEBP</p>
+              </div>
+            )}
+
+            {(formData.imagen_url || imageFile) && (
+              <div className="image-preview">
+                <img 
+                  src={imageFile ? URL.createObjectURL(imageFile) : formData.imagen_url} 
+                  alt="Vista previa"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
             <button type="button" onClick={onCancel} className="btn btn-secondary">
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : eventoToEdit ? 'Actualizar' : 'Crear'}
+            <button type="submit" className="btn btn-primary" disabled={loading || uploadingImage}>
+              {uploadingImage ? 'Subiendo imagen...' : loading ? 'Guardando...' : eventoToEdit ? 'Actualizar' : 'Crear'}
             </button>
           </div>
         </form>

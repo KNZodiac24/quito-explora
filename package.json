@@ -10,19 +10,26 @@
     "setup:check": "node scripts/setup-check.js",
     "generate:hashes": "node scripts/generate-password-hashes.js"
   },
-  "keywords": ["adopcion", "mascotas", "react", "express", "websocket"],
+  "keywords": [
+    "adopcion",
+    "mascotas",
+    "react",
+    "express",
+    "websocket"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "ws": "^8.14.2",
+    "multer": "^2.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "dotenv": "^16.3.1"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

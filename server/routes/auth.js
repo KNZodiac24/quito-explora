@@ -57,6 +57,7 @@ router.post('/login', async (req, res) => {
 
     res.json({
       message: 'Login exitoso',
+      token: token, // Enviar token para localStorage (para WebSocket)
       usuario: data.user
     });
   } catch (error) {

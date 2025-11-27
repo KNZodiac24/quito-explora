@@ -1,6 +1,6 @@
 const { useState, useEffect } = window.React;
 
-function EventList({ eventos, token, isAdmin, onEdit }) {
+function EventList({ eventos, token, isAdmin, onEdit, onOpenChat }) {
   const [error, setError] = useState('');
 
   const onDelete = async (id) => {
@@ -154,16 +154,26 @@ function EventList({ eventos, token, isAdmin, onEdit }) {
                 </a>
               )}
 
-              {isAdmin && (
-                <div className="event-actions">
-                  <button onClick={() => onEdit(evento)} className="btn btn-small btn-primary">
-                    Editar
-                  </button>
-                  <button onClick={() => onDelete(evento.id)} className="btn btn-small btn-danger">
-                    Eliminar
-                  </button>
-                </div>
-              )}
+              <div className="event-actions">
+                <button 
+                  onClick={() => onOpenChat(evento)} 
+                  className="btn btn-small btn-chat"
+                  title="Abrir chat del evento"
+                >
+                  💬 Chat
+                </button>
+                
+                {isAdmin && (
+                  <>
+                    <button onClick={() => onEdit(evento)} className="btn btn-small btn-primary">
+                      Editar
+                    </button>
+                    <button onClick={() => onDelete(evento.id)} className="btn btn-small btn-danger">
+                      Eliminar
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         ))}

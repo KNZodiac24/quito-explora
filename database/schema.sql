@@ -41,10 +41,13 @@ CREATE TABLE IF NOT EXISTS eventos (
 );
 
 DROP TABLE IF EXISTS mensajes_chat CASCADE;
--- Tabla de mensajes del chat
+-- Tabla de mensajes del chat por evento
+-- usuario_id hace referencia a auth.users de Supabase (UUID)
+-- evento_id hace referencia a la tabla eventos
 CREATE TABLE IF NOT EXISTS mensajes_chat (
   id SERIAL PRIMARY KEY,
-  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  evento_id INTEGER NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+  usuario_id UUID NOT NULL,
   usuario_nombre VARCHAR(100) NOT NULL,
   contenido TEXT NOT NULL,
   fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -55,13 +58,15 @@ DROP INDEX IF EXISTS idx_eventos_categoria;
 DROP INDEX IF EXISTS idx_eventos_sector;
 DROP INDEX IF EXISTS idx_eventos_estado;
 DROP INDEX IF EXISTS idx_usuarios_email;
-DROP INDEX IF EXISTS idx_mensajes_fecha; 
+DROP INDEX IF EXISTS idx_mensajes_fecha;
+DROP INDEX IF EXISTS idx_mensajes_evento; 
 CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos(fecha_evento);
 CREATE INDEX IF NOT EXISTS idx_eventos_categoria ON eventos(categoria);
 CREATE INDEX IF NOT EXISTS idx_eventos_sector ON eventos(sector);
 CREATE INDEX IF NOT EXISTS idx_eventos_estado ON eventos(estado);
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 CREATE INDEX IF NOT EXISTS idx_mensajes_fecha ON mensajes_chat(fecha_envio DESC);
+CREATE INDEX IF NOT EXISTS idx_mensajes_evento ON mensajes_chat(evento_id);
 
 -- Datos de prueba
 

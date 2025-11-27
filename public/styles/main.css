@@ -608,6 +608,26 @@ body {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+
+.btn-chat {
+  background-color: #764ba2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-chat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .pet-breed {
@@ -926,6 +946,85 @@ body {
   flex-shrink: 0;
 }
 
+/* Image Upload Styles */
+.image-option-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px 20px;
+  border: 2px solid var(--border-color);
+  background: white;
+  color: var(--dark-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.tab-button:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.tab-button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.file-upload-wrapper {
+  margin-top: 10px;
+}
+
+.file-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.file-input:hover {
+  border-color: var(--primary-color);
+  background: rgba(74, 144, 226, 0.05);
+}
+
+.file-name {
+  margin-top: 10px;
+  padding: 10px;
+  background: #e3f2fd;
+  border-radius: 6px;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.file-hint {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.image-preview {
+  margin-top: 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 400px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Chat */
 .chat-toggle-btn {
   position: fixed;
@@ -974,6 +1073,14 @@ body {
 
 .chat-header h3 {
   font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.chat-event-title {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-weight: normal;
+  margin: 0;
 }
 
 .chat-status {

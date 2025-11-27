@@ -1,6 +1,6 @@
 const { useState, useEffect, useRef } = window.React;
 
-function Chat({ user, token, onClose }) {
+function Chat({ user, token, evento, onClose }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [ws, setWs] = useState(null);
@@ -8,7 +8,7 @@ function Chat({ user, token, onClose }) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Cargar mensajes previos
+    // Cargar mensajes previos del evento
     fetchMessages();
 
     // Establecer conexión WebSocket
@@ -19,10 +19,11 @@ function Chat({ user, token, onClose }) {
     websocket.onopen = () => {
       console.log('WebSocket conectado');
       setConnected(true);
-      // Autenticar con el servidor
+      // Autenticar con el servidor y unirse al room del evento
       websocket.send(JSON.stringify({
         type: 'auth',
         token: token,
+        eventoId: evento.id,
       }));
     };
 
@@ -35,7 +36,7 @@ function Chat({ user, token, onClose }) {
             console.error('Error de autenticación WebSocket');
             websocket.close();
           }
-        } else if (data.type === 'chat') {
+        } else if (data.type === 'chat' && data.evento_id === evento.id) {
           setMessages((prev) => [...prev, data]);
           scrollToBottom();
         }
@@ -60,11 +61,11 @@ function Chat({ user, token, onClose }) {
         websocket.close();
       }
     };
-  }, [token]);
+  }, [token, evento.id]);
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch('/api/chat?limit=50', {
+      const response = await fetch(`/api/chat/${evento.id}?limit=50`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -91,7 +92,7 @@ function Chat({ user, token, onClose }) {
 
     try {
       // Guardar en la base de datos
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`/api/chat/${evento.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +129,10 @@ function Chat({ user, token, onClose }) {
   return (
     <div className="chat-container">
       <div className="chat-header">
-        <h3>💬 Servicio al Cliente</h3>
+        <div>
+          <h3>💬 Chat del Evento</h3>
+          <p className="chat-event-title">{evento.titulo}</p>
+        </div>
         <div className="chat-status">
           <span className={`status-indicator ${connected ? 'connected' : 'disconnected'}`}></span>
           {connected ? 'Conectado' : 'Desconectado'}
