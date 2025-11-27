@@ -1,5 +1,5 @@
 const { useState, useEffect } = window.React;
-const { Login, Register, ForgotPassword, Dashboard } = window;
+const { Login, Register, ForgotPassword, ResetPassword, Dashboard } = window;
 
 function App() {
   const [currentView, setCurrentView] = useState('login');
@@ -22,6 +22,8 @@ function App() {
         setCurrentView('register');
       } else if (path === '/forgot-password') {
         setCurrentView('forgot-password');
+      } else if (path === '/reset-password') {
+        setCurrentView('reset-password');
       } else if (path === '/dashboard') {
         setCurrentView('login');
       } else {
@@ -63,6 +65,9 @@ function App() {
       )}
       {currentView === 'forgot-password' && (
         <ForgotPassword onNavigate={handleNavigate} />
+      )}
+      {currentView === 'reset-password' && (
+        <ResetPassword onNavigate={handleNavigate} />
       )}
       {currentView === 'dashboard' && user && (
         <Dashboard user={user} token={token} onLogout={handleLogout} />

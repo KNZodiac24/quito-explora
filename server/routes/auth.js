@@ -65,11 +65,13 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 });
+
 // Logout de usuario
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logout exitoso' });
 });
+
 // Solicitar restablecimiento de contraseña
 router.post('/forgot-password', async (req, res) => {
   try {
@@ -79,7 +81,10 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email es obligatorio' });
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // ! url de redireccionamiento después de solcitar restablecer contraseña
+      redirectTo: `http://localhost:3000/reset-password`
+    });
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -89,31 +94,6 @@ router.post('/forgot-password', async (req, res) => {
   } catch (error) {
     console.error('Error en recuperación de contraseña:', error);
     res.status(500).json({ error: 'Error al procesar solicitud' });
-  }
-});
-// Restablecer contraseña
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { newPassword, token } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token y nueva contraseña son obligatorios' });
-    }
-
-    const { data, error } = await supabase.auth.updateUser(
-      { password: newPassword },
-      { access_token: token }
-    );
-
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.json({ message: 'Contraseña actualizada exitosamente' });
-
-  } catch (error) {
-    console.error('Error en reset-password:', error);
-    res.status(500).json({ error: 'Error al restablecer contraseña' });
   }
 });
 
