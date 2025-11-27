@@ -26,7 +26,14 @@ function Login({ onLogin, onNavigate }) {
         throw new Error(data.error || 'Error al iniciar sesión');
       }
 
-      onLogin(data.usuario, data.token);
+      const cleanUser = {
+      id: data.usuario.id,
+      email: data.usuario.email,
+      nombre: data.usuario.user_metadata?.nombre || '',
+      rol: data.usuario.user_metadata?.rol || 'usuario'
+      };
+
+      onLogin(cleanUser, data.token);
     } catch (error) {
       setError(error.message);
     } finally {
