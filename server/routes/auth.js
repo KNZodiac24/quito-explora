@@ -64,6 +64,11 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 });
+// Logout de usuario
+router.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logout exitoso' });
+});
 
 
 
