@@ -90,6 +90,30 @@ router.post('/forgot-password', async (req, res) => {
     res.status(500).json({ error: 'Error al procesar solicitud' });
   }
 });
+// Restablecer contraseña
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { newPassword, token } = req.body;
 
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token y nueva contraseña son obligatorios' });
+    }
+
+    const { data, error } = await supabase.auth.updateUser(
+      { password: newPassword },
+      { access_token: token }
+    );
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+
+  } catch (error) {
+    console.error('Error en reset-password:', error);
+    res.status(500).json({ error: 'Error al restablecer contraseña' });
+  }
+});
 
 export default router;
