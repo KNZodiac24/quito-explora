@@ -69,7 +69,27 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logout exitoso' });
 });
+// Solicitar restablecimiento de contraseña
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ error: 'Email es obligatorio' });
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({ message: 'Correo de recuperación enviado' });
+  } catch (error) {
+    console.error('Error en recuperación de contraseña:', error);
+    res.status(500).json({ error: 'Error al procesar solicitud' });
+  }
+});
 
 
 export default router;
