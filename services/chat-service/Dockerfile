@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Instalar OpenSSL para Prisma y herramientas de compilación
+RUN apk add --no-cache openssl openssl-dev python3 make g++
+
 COPY package*.json ./
 RUN npm install
 

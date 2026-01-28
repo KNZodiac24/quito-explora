@@ -2,8 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Instalar dependencias de compilación para bcrypt
-RUN apk add --no-cache python3 make g++
+# Instalar dependencias de compilación para bcrypt y OpenSSL para Prisma
+RUN apk add --no-cache python3 make g++ openssl openssl-dev
 
 COPY package*.json ./
 RUN npm install
