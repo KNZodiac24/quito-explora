@@ -18,4 +18,4 @@ RUN mkdir -p /app/uploads
 
 EXPOSE 3002
 
-CMD ["sh", "-c", "npx prisma db push && node src/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node prisma/seed.js && node src/index.js"]
