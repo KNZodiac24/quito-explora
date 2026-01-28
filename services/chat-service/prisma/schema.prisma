@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MensajeChat {
+  id             Int      @id @default(autoincrement())
+  evento_id      Int
+  usuario_id     Int
+  usuario_nombre String   @db.VarChar(100)
+  contenido      String
+  fecha_envio    DateTime @default(now())
+
+  @@map("mensajes_chat")
+  @@index([evento_id])
+  @@index([fecha_envio(sort: Desc)])
+}

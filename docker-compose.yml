@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # BASES DE DATOS
+  # ============================================
+  auth-db:
+    image: postgres:15-alpine
+    container_name: quitoexplora-auth-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eventos-db:
+    image: postgres:15-alpine
+    container_name: quitoexplora-eventos-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: eventos_db
+      POSTGRES_USER: eventos_user
+      POSTGRES_PASSWORD: ${EVENTOS_DB_PASSWORD}
+    volumes:
+      - eventos-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventos_user -d eventos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  chat-db:
+    image: postgres:15-alpine
+    container_name: quitoexplora-chat-db
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: chat_db
+      POSTGRES_USER: chat_user
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chat_user -d chat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # MICROSERVICIOS
+  # ============================================
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: quitoexplora-auth-service
+    environment:
+      DATABASE_URL: postgresql://auth_user:${AUTH_DB_PASSWORD}@auth-db:5432/auth_db
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 24h
+      NODE_ENV: production
+      PORT: 3001
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  eventos-service:
+    build:
+      context: ./services/eventos-service
+      dockerfile: Dockerfile
+    container_name: quitoexplora-eventos-service
+    environment:
+      DATABASE_URL: postgresql://eventos_user:${EVENTOS_DB_PASSWORD}@eventos-db:5432/eventos_db
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+      PORT: 3002
+    volumes:
+      - eventos-uploads:/app/uploads
+    depends_on:
+      eventos-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  chat-service:
+    build:
+      context: ./services/chat-service
+      dockerfile: Dockerfile
+    container_name: quitoexplora-chat-service
+    environment:
+      DATABASE_URL: postgresql://chat_user:${CHAT_DB_PASSWORD}@chat-db:5432/chat_db
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      EVENTOS_SERVICE_URL: http://eventos-service:3002
+      NODE_ENV: production
+      PORT: 3003
+    depends_on:
+      chat-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      eventos-service:
+        condition: service_started
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  # ============================================
+  # FRONTEND
+  # ============================================
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: quitoexplora-frontend
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  # ============================================
+  # API GATEWAY (NGINX)
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: quitoexplora-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - eventos-service
+      - chat-service
+      - frontend
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  auth-db-data:
+  eventos-db-data:
+  chat-db-data:
+  eventos-uploads:
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  backend-network:
+    driver: bridge

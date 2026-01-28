@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Evento {
+  id                         Int       @id @default(autoincrement())
+  titulo                     String    @db.VarChar(200)
+  descripcion                String?
+  categoria                  String    @db.VarChar(50)
+  fecha_evento               DateTime
+  hora_inicio                String    @db.VarChar(10)
+  hora_fin                   String?   @db.VarChar(10)
+  lugar                      String    @db.VarChar(200)
+  direccion_lugar            String?
+  sector                     String?   @db.VarChar(100)
+  capacidad_max              Int?
+  precio_entrada             Decimal   @default(0.00) @db.Decimal(10, 2)
+  organizador                String?   @db.VarChar(150)
+  contacto_organizador       String?   @db.VarChar(100)
+  imagen_url                 String?
+  es_gratuito                Boolean   @default(false)
+  requiere_reserva           Boolean   @default(false)
+  es_virtual                 Boolean   @default(false)
+  link_virtual               String?
+  estado                     String    @default("Programado") @db.VarChar(30)
+  edad_minima                Int?
+  accesibilidad_discapacidad Boolean   @default(false)
+  estacionamiento_disponible Boolean   @default(false)
+  fecha_registro             DateTime  @default(now())
+
+  @@map("eventos")
+  @@index([fecha_evento])
+  @@index([categoria])
+  @@index([sector])
+  @@index([estado])
+}
