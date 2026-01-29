@@ -50,7 +50,7 @@ jobs:
         run: |
           # Verificar que el código sea válido sintácticamente
           if [ -d "src" ]; then
-            node -c src/index.js || node -c src/main.jsx || true
+            node -c src/main.jsx || true
           fi
 
   # ============================================
