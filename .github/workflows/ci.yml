@@ -43,7 +43,7 @@ jobs:
 
       - name: Instalar dependencias - ${{ matrix.service.name }}
         working-directory: ${{ matrix.service.path }}
-        run: npm ci
+        run: npm i && npm ci
 
       - name: Verificar sintaxis de código - ${{ matrix.service.name }}
         working-directory: ${{ matrix.service.path }}
