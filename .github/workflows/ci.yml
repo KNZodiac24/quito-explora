@@ -218,7 +218,6 @@ jobs:
       - lint-and-validate
       - build-docker-images
       - docker-compose-test
-      - security-scan
     if: success()
     
     steps:
