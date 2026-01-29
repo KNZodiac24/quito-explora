@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
+import { metricsMiddleware, metricsHandler } from './metrics.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,10 +15,16 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Metrics middleware
+app.use(metricsMiddleware);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'auth-service' });
 });
+
+// Metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // Rutas
 app.use('/', authRoutes);

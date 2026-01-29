@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'quito-explora-monitor'
+
+scrape_configs:
+  # Auth Service
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:3001']
+        labels:
+          service: 'auth'
+
+  # Eventos Service
+  - job_name: 'eventos-service'
+    static_configs:
+      - targets: ['eventos-service:3002']
+        labels:
+          service: 'eventos'
+
+  # Chat Service
+  - job_name: 'chat-service'
+    static_configs:
+      - targets: ['chat-service:3003']
+        labels:
+          service: 'chat'
+
+  # PostgreSQL Exporters
+  - job_name: 'postgres-auth-db'
+    static_configs:
+      - targets: ['postgres-exporter-auth:9187']
+        labels:
+          database: 'auth_db'
+
+  - job_name: 'postgres-eventos-db'
+    static_configs:
+      - targets: ['postgres-exporter-eventos:9187']
+        labels:
+          database: 'eventos_db'
+
+  - job_name: 'postgres-chat-db'
+    static_configs:
+      - targets: ['postgres-exporter-chat:9187']
+        labels:
+          database: 'chat_db'

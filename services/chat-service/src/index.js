@@ -3,6 +3,7 @@ import cors from 'cors';
 import http from 'http';
 import chatRoutes from './routes/chat.js';
 import { setupWebSocket } from './websocket/chatHandler.js';
+import { metricsMiddleware, metricsHandler } from './metrics.js';
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -14,10 +15,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Metrics middleware
+app.use(metricsMiddleware);
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'chat-service' });
 });
+
+// Metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // Rutas HTTP
 app.use('/', chatRoutes);

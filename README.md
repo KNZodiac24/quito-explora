@@ -145,6 +145,11 @@ quito-explora/
 | Auth Service | 3001 |
 | Eventos Service | 3002 |
 | Chat Service | 3003 |
+| Grafana | 3030 |
+| Prometheus | 9090 |
+| Postgres Exporter (Auth) | 9187 |
+| Postgres Exporter (Eventos) | 9188 |
+| Postgres Exporter (Chat) | 9189 |
 
 ## Endpoints API
 
@@ -176,6 +181,36 @@ docker-compose up -d --build
 ```
 
 La aplicacion estara en: **http://localhost**
+
+## Monitoreo
+
+El proyecto incluye monitoreo completo con Prometheus y Grafana.
+
+### Acceso
+
+- **Grafana**: http://localhost:3030
+  - Usuario: `admin`
+  - Contraseña: `admin`
+- **Prometheus**: http://localhost:9090
+
+### Dashboards Disponibles
+
+1. **QuitoExplora - Node.js Services**
+   - Request rate, latencia, uso de CPU/memoria
+   - Distribución de códigos HTTP
+
+2. **QuitoExplora - PostgreSQL Databases**
+   - Conexiones activas, transacciones
+   - Cache hit ratio, tamaño de base de datos
+
+### Métricas de Servicios
+
+Cada microservicio expone métricas en `/metrics`:
+- Auth Service: http://localhost:3001/metrics (interno)
+- Eventos Service: http://localhost:3002/metrics (interno)
+- Chat Service: http://localhost:3003/metrics (interno)
+
+Para más información, ver **[MONITORING.md](MONITORING.md)**.
 
 ## Tecnologias
 

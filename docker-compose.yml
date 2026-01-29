@@ -158,6 +158,94 @@ services:
       - backend-network
     restart: unless-stopped
 
+  # ============================================
+  # MONITOREO - PROMETHEUS
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: quitoexplora-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  # ============================================
+  # MONITOREO - GRAFANA
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: quitoexplora-grafana
+    ports:
+      - "3030:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - backend-network
+    restart: unless-stopped
+
+  # ============================================
+  # MONITOREO - POSTGRES EXPORTERS
+  # ============================================
+  postgres-exporter-auth:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: quitoexplora-postgres-exporter-auth
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://auth_user:${AUTH_DB_PASSWORD}@auth-db:5432/auth_db?sslmode=disable"
+    networks:
+      - backend-network
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres-exporter-eventos:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: quitoexplora-postgres-exporter-eventos
+    ports:
+      - "9188:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://eventos_user:${EVENTOS_DB_PASSWORD}@eventos-db:5432/eventos_db?sslmode=disable"
+    networks:
+      - backend-network
+    depends_on:
+      eventos-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres-exporter-chat:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: quitoexplora-postgres-exporter-chat
+    ports:
+      - "9189:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://chat_user:${CHAT_DB_PASSWORD}@chat-db:5432/chat_db?sslmode=disable"
+    networks:
+      - backend-network
+    depends_on:
+      chat-db:
+        condition: service_healthy
+    restart: unless-stopped
+
 # ============================================
 # VOLUMES
 # ============================================
@@ -166,6 +254,8 @@ volumes:
   eventos-db-data:
   chat-db-data:
   eventos-uploads:
+  prometheus-data:
+  grafana-data:
 
 # ============================================
 # NETWORKS

@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import eventosRoutes from './routes/eventos.js';
+import { metricsMiddleware, metricsHandler } from './metrics.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Metrics middleware
+app.use(metricsMiddleware);
+
 // Servir archivos de uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -24,6 +28,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'eventos-service' });
 });
+
+// Metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // Rutas
 app.use('/', eventosRoutes);
